@@ -6,19 +6,21 @@ import { CustomLogger } from '../custom.logger';
 /** * Helper - System */
 export class SystemHelper {
   private readonly logger: CustomLogger = new CustomLogger(SystemHelper.name);
-  uploadFolder = path.join(__dirname, '..', '..', 'uploads');
+  uploadFolder: string = path.join(__dirname, '..', '..', 'uploads');
+  publicFolder: string = path.join(__dirname, '..', '..', 'public');
 
-  constructor() { }
+  constructor() {}
 
   /** * Get IP-Address */
   getIpAddress(): string {
     const defaultAddress = 'localhost';
     try {
-      const ifaces = os.networkInterfaces();
+      const ifaces: NodeJS.Dict<os.NetworkInterfaceInfo[]> =
+        os.networkInterfaces();
       let ipAddress: string | undefined;
 
-      Object.keys(ifaces).forEach((ifname) => {
-        ifaces[ifname]?.forEach((iface: NetworkInterfaceInfo) => {
+      Object.keys(ifaces).forEach((ifname: string): void => {
+        ifaces[ifname]?.forEach((iface: NetworkInterfaceInfo): void => {
           if ('IPv4' === iface.family && !iface.internal) {
             ipAddress = iface.address;
           }

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>File Uploads</title>
-  <link rel="stylesheet" href="/css/styles.css"> <!-- Link to the CSS file -->
+  <link rel="stylesheet" type="text/css" href="public/css/styles.css">
 </head>
 <body>
   <h1>File Uploads</h1>
@@ -14,15 +14,21 @@
     <button type="submit">Upload</button>
   </form>
 
-  <hr>
-
   <% for (let type in fileGroups) { %>
-    <h3><%= type %></h3>
-    <ul>
-      <% fileGroups[type].forEach(file => { %>
-        <li><a href="/<%= type %>/<%= file %>" download="<%= file %>"><%= file %></a></li>
-      <% }) %>
-    </ul>
+    <details>
+      <summary><%= type %></summary>
+      <div>
+        <ul>
+        <% fileGroups[type].forEach(file=> { %>
+        <li>
+          <a href="uploads/<%= type %>/<%= file %>" download="<%= file %>">
+            <%= file %>
+          </a>
+        </li>
+        <% }) %>
+      </ul>
+    </div>
+    </details>
   <% } %>
 </body>
 </html>

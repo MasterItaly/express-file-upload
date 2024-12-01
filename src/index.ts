@@ -8,40 +8,38 @@ import { SystemHelper } from './helpers/system.helper';
 const logger = new CustomLogger('Entry Point');
 const systemHelper = new SystemHelper();
 
-const app = express();
-const ip = systemHelper.getIpAddress();
-const port = 3000;
-const url = `http://${ip}:${port}`;
+const app: express.Express = express();
+const ip: string = systemHelper.getIpAddress();
+const port: number = 3000;
+const url: string = `http://${ip}:${port}`;
 
-// Set EJS as the templating engine
 app.set('view engine', 'ejs');
 
-// Serve static files like CSS from the "public" folder
-app.use(express.static('public'));
+const uploadFolder: string = systemHelper.uploadFolder;
+const publicFolder: string = systemHelper.publicFolder;
+logger.debug(publicFolder);
 
-app.use((req, res, next) => {
-  logger.info(`Request of IP: ${req.ip?.replace('::ffff:', '')}`);
-  next();
-});
-
-// Helper function to get the file extension
+/**
+ * * Get File Extension
+ * @param fileName
+ * @returns
+ */
 const getFileExtension: (fileName: string) => string = (
   fileName: string
 ): string => {
-  return path.extname(fileName).slice(1); // Remove the dot from extension
+  return path.extname(fileName).slice(1);
 };
 
-// Define the multer storage configuration
+/** * Multer - Storage */
 const storage: multer.StorageEngine = multer.diskStorage({
   destination: (
     req: Request,
     file: Express.Multer.File,
     cb: (error: Error | null, destination: string) => void
-  ) => {
+  ): void => {
     const fileExtension: string = getFileExtension(file.originalname);
     const folder: string = path.join('uploads', fileExtension);
 
-    // Ensure the folder exists
     fs.mkdirSync(folder, { recursive: true });
     cb(null, folder);
   },
@@ -49,12 +47,22 @@ const storage: multer.StorageEngine = multer.diskStorage({
     req: Request,
     file: Express.Multer.File,
     cb: (error: Error | null, filename: string) => void
-  ) => {
+  ): void => {
     cb(null, file.originalname);
   },
 });
 
-const upload: multer.Multer = multer({ storage });
+/** * Multer - Uploader */
+const uploader: multer.Multer = multer({ storage });
+
+app.use('/uploads', express.static(uploadFolder));
+app.use('/public', express.static(publicFolder));
+
+//>> Show Client User
+app.use((req, res, next): void => {
+  logger.info(`Request of IP: ${req.ip?.replace('::ffff:', '')}`);
+  next();
+});
 
 //>> Navigate - Root
 app.get('/', (req: Request, res: Response): void => {
@@ -76,7 +84,7 @@ app.get('/', (req: Request, res: Response): void => {
 //>> Navigate - Upload
 app.post(
   '/upload',
-  upload.single('file'),
+  uploader.single('file'),
   (req: Request, res: Response): void => {
     res.redirect('/');
   }
