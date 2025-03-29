@@ -2,6 +2,8 @@
   "name": "express-file-upload",
   "main": "index.js",
   "scripts": {
+    "preinstall": "npm outdated || true",
+    "prestart": "npm outdated || true",
     "start": "npx tsc && node dist/index.js"
   },
   "dependencies": {

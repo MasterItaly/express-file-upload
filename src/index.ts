@@ -5,39 +5,34 @@ import path from 'path';
 import { CustomLogger } from './custom.logger';
 import { SystemHelper } from './helpers/system.helper';
 
-const logger = new CustomLogger('Entry Point');
-const systemHelper = new SystemHelper();
+const logger: CustomLogger = new CustomLogger('Entry Point');
 
 const app: express.Express = express();
-const ip: string = systemHelper.getIpAddress();
-const port: number = 3000;
+const ip: string = SystemHelper.getIpAddress();
+const port: number = 3101;
 const url: string = `http://${ip}:${port}`;
 
-app.set('view engine', 'ejs');
+const uploadDirectory: string = SystemHelper.uploadDirectory;
+const publicDirectory: string = SystemHelper.publicDirectory;
+const viewsDirectory: string = SystemHelper.viewsDirectory;
 
-const uploadFolder: string = systemHelper.uploadFolder;
-const publicFolder: string = systemHelper.publicFolder;
-logger.debug(publicFolder);
+app.use('/uploads', express.static(uploadDirectory));
+app.use('/public', express.static(publicDirectory));
+
+app.set('view engine', 'ejs');
+app.set('views', viewsDirectory);
 
 /**
- * * Get File Extension
- * @param fileName
- * @returns
+ * * Multer - Storage
  */
-const getFileExtension: (fileName: string) => string = (
-  fileName: string
-): string => {
-  return path.extname(fileName).slice(1);
-};
-
-/** * Multer - Storage */
 const storage: multer.StorageEngine = multer.diskStorage({
   destination: (
     req: Request,
     file: Express.Multer.File,
     cb: (error: Error | null, destination: string) => void
   ): void => {
-    const fileExtension: string = getFileExtension(file.originalname);
+    const fileName: string = file.originalname;
+    const fileExtension: string = path.extname(fileName)?.slice(1);
     const folder: string = path.join('uploads', fileExtension);
 
     fs.mkdirSync(folder, { recursive: true });
@@ -48,31 +43,32 @@ const storage: multer.StorageEngine = multer.diskStorage({
     file: Express.Multer.File,
     cb: (error: Error | null, filename: string) => void
   ): void => {
-    cb(null, file.originalname);
+    const fileName: string = file.originalname;
+    cb(null, fileName);
   },
 });
 
-/** * Multer - Uploader */
+/**
+ * * Multer - Uploader
+ */
 const uploader: multer.Multer = multer({ storage });
-
-app.use('/uploads', express.static(uploadFolder));
-app.use('/public', express.static(publicFolder));
 
 //>> Show Client User
 app.use((req, res, next): void => {
   logger.info(`Request of IP: ${req.ip?.replace('::ffff:', '')}`);
+  logger.info(JSON.stringify(req.headers, null, 2));
   next();
 });
 
 //>> Navigate - Root
 app.get('/', (req: Request, res: Response): void => {
-  const fileGroups: { [key: string]: string[] } = {};
+  const fileGroups: { [key: string]: Array<string> } = {};
   const uploadFolder: string = path.join(__dirname, '../uploads');
-  const folders: string[] = fs.readdirSync(uploadFolder);
+  const folders: Array<string> = fs.readdirSync(uploadFolder);
 
   folders.forEach((folder: string): void => {
     const folderPath: string = path.join(uploadFolder, folder);
-    const files: string[] = fs.readdirSync(folderPath);
+    const files: Array<string> = fs.readdirSync(folderPath);
     if (files.length) {
       fileGroups[folder] = files;
     }
